@@ -8,11 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MotorcyclingContestApp
+namespace MotorcyclingContestApp.Forms
 {
-    public partial class Form1 : Form
+    public partial class SearchForm : Form
     {
-        public Form1()
+        public SearchForm()
         {
             InitializeComponent();
         }
