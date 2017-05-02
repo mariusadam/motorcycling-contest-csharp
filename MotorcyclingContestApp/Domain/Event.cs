@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace MotorcyclingContestApp.Domain
 {
-    class Event
+    public class Event
     {
+        public EventName Name { get; set; }
     }
 }

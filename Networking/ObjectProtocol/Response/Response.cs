@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MotorcyclingContestApp.Domain
+namespace Networking.ObjectProtocol.Response
 {
-    public enum EventName
+    public interface Response
     {
-        ContestantRegistered,
-        TeamAdded
+
     }
 }

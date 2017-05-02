@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MotorcyclingContestApp.Domain
+namespace Server
 {
-    public enum EventName
+    class Program
     {
-        ContestantRegistered,
-        TeamAdded
+        static void Main(string[] args)
+        {
+        }
     }
 }

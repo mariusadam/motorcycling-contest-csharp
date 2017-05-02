@@ -15,28 +15,24 @@ namespace MotorcyclingContestApp.Forms
 {
     public partial class LoginForm : Form
     {
-        private ClientProxy Client { get; }
+        private IClientProxy Client { get; }
 
-        public LoginForm([Dependency()] ClientProxy client)
+        public LoginForm([Dependency()] IClientProxy client)
         {
             Client = client;
             InitializeComponent();
 
             passTextBox.PasswordChar = '*';
             passTextBox.MaxLength = 32;
-            emailTextBox.Text = "a@b.com";
-            passTextBox.Text = "abcd1234";
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
+            emailTextBox.Text = @"a@b.com";
+            passTextBox.Text = @"abcd1234";
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var reply = Client.Login(emailTextBox.Text, passTextBox.Text);
-            if (reply.Status == Status.Ok)
+            try
             {
+                Client.Login(emailTextBox.Text, passTextBox.Text);
                 using (var mainForm = DependencyFactory.Resolve<MainForm>())
                 {
                     Hide();
@@ -44,10 +40,10 @@ namespace MotorcyclingContestApp.Forms
                     Close();
                 }
             }
-            else
+            catch (Exception ex)
             {
                 MessageBox.Show(
-                    reply.Message, "Info",
+                    ex.Message, "Info",
                     MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk
                 );
             }

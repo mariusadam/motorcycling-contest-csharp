@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 using Generated;
@@ -12,24 +13,25 @@ using Status = Generated.Status;
 
 namespace MotorcyclingContestApp.Client
 {
-    public class ClientProxy
+    public class GrpcClientProxy : IClientProxy
     {
         private readonly MotoContest.MotoContestClient _client;
         public Channel Channel { get; }
-        private Converter _converter;
+        private readonly Converter _converter;
 
-        public ClientProxy([Dependency()] Channel channel, [Dependency()] Converter converter)
+        public GrpcClientProxy([Dependency()] Channel channel, [Dependency()] Converter converter)
         {
             _converter = converter;
             Channel = channel;
             this._client = new MotoContest.MotoContestClient(Channel);
         }
 
-        public async void Subscribe(List<Event.Types.Name> eventsNames, Action<Event> eventsHandler)
+        public async void Subscribe(IEnumerable<EventName> eventsNames, Action<Domain.Event> eventsHandler)
         {
+            var evNamesDto = eventsNames.Select(evn => _converter.ToDto(evn)).ToList();
             var request = new SubscribeRequest
             {
-                EventName = {eventsNames}
+                EventName = {evNamesDto}
             };
 
             try
@@ -40,7 +42,7 @@ namespace MotorcyclingContestApp.Client
                     while (await responseStream.MoveNext())
                     {
                         var e = responseStream.Current;
-                        eventsHandler(e);
+                        eventsHandler(_converter.ToPoco(e));
                     }
                 }
             }
@@ -51,82 +53,69 @@ namespace MotorcyclingContestApp.Client
             }
         }
 
-        public HelloReply SayHello(string user)
+        public void Login(string email, string password)
         {
-            return _client.SayHello(new HelloRequest
-                {
-                    Name = user
-                }
-            );
-        }
-
-        public HelloReply SayHelloAgain(string user)
-        {
-            return _client.SayHelloAgain(new HelloRequest
-                {
-                    Name = user
-                }
-            );
-        }
-
-        public LoginReply Login(string email, string password)
-        {
-            return _client.Login(
+            var reply = _client.Login(
                 new LoginRequest
                 {
                     Email = email,
                     Password = password
                 }
             );
+            CheckStatus(reply.Status, reply.Message);
         }
 
-        public GetContestantsReply GetContestants()
+        public IEnumerable<Contestant> GetContestants()
         {
-            return _client.GetContestants(new GetContestantsRequest());
+            var reply = _client.GetContestants(new GetContestantsRequest());
+            CheckStatus(reply.Status, reply.Message);
+
+            return reply.Contestant.Select(
+                contestantDto => _converter.ToPoco(contestantDto)
+            ).ToList();
         }
 
-        public SearchContestantsReply SearchContestatns(string teamName)
+        public IEnumerable<Contestant> SearchContestatns(string teamName)
         {
-            return _client.Search(
+            var reply = _client.Search(
                 new SearchContestantsRequest
                 {
                     TeamName = teamName
                 }
             );
+            CheckStatus(reply.Status, reply.Message);
+
+            return reply.Contestant.Select(
+                contestantDto => _converter.ToPoco(contestantDto)
+            ).ToList();
         }
 
-        public List<Race> GetRaces()
+        public IEnumerable<Race> GetRaces()
         {
             var reply = _client.GetRaces(
                 new Empty()
             );
+            CheckStatus(reply.Status, reply.Message);
 
-            var result = new List<Race>();
-            if (reply.Status != Generated.Status.Ok)
-            {
-                return result;
-            }
-
-            foreach (var r in reply.Race)
-            {
-                result.Add(_converter.ToPoco(r));
-            }
-            return result;
+            return reply.Race.Select(r => _converter.ToPoco(r)).ToList();
         }
 
-        public SimpleReply RegisterContestant(string contestantName, Team team, EngineCapacity ec,
+        public void RegisterContestant(string contestantName, Team team, EngineCapacity ec,
             IEnumerable<Race> races)
         {
-            var request = new RegisterContestantRequest();
-            request.ContestantName = contestantName;
-            request.Team = _converter.ToDto(team);
-            request.EngineCapacity = _converter.ToDto(ec);
+            var request = new RegisterContestantRequest
+            {
+                ContestantName = contestantName,
+                Team = _converter.ToDto(team),
+                EngineCapacity = _converter.ToDto(ec)
+            };
             foreach (var race in races)
             {
                 request.Race.Add(_converter.ToDto(race));
             }
 
-            return _client.RegisterContestant(request);
+            var reply = _client.RegisterContestant(request);
+            CheckStatus(reply.Status, reply.Message);
         }
 
         public IEnumerable<Team> GetTeams()
@@ -163,14 +152,16 @@ namespace MotorcyclingContestApp.Client
             return result;
         }
 
-        public SimpleReply AddTeam(string teamName)
+        public void AddTeam(string teamName)
         {
-            return _client.AddTeam(
+            var reply = _client.AddTeam(
                 new AddTeamRequest
                 {
                     TeamName = teamName
                 }
             );
+
+            CheckStatus(reply.Status, reply.Message);
         }
 
         public async void GetRacesParticipants(Action<Race, int> addRaceDelegate)
@@ -196,6 +187,14 @@ namespace MotorcyclingContestApp.Client
             {
                 Console.WriteLine("Rpc failed " + e.Message);
                 //throw;
+            }
+        }
+
+        private void CheckStatus(Status status, string message)
+        {
+            if (status != Status.Ok)
+            {
+                throw new ClientException(message);
             }
         }
 

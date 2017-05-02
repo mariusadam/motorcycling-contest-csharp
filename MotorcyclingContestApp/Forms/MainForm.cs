@@ -16,10 +16,9 @@ namespace MotorcyclingContestApp.Forms
 {
     public partial class MainForm : Form
     {
-        private readonly ClientProxy _client;
-        private AutoCompleteStringCollection _teamNameAutocompleteCollection;
+        private readonly IClientProxy _client;
 
-        public MainForm([Dependency()] ClientProxy client)
+        public MainForm([Dependency()] IClientProxy client)
         {
             _client = client;
             InitializeComponent();
@@ -29,9 +28,7 @@ namespace MotorcyclingContestApp.Forms
 
         private void InitializeTabs()
         {
-            var searchForm = DependencyFactory.Resolve<SearchForm>();
-            var registerForm = DependencyFactory.Resolve<RegisterForm>();
-            var contestants = _client.GetContestants().Contestant.ToList();
+            var contestants = _client.GetContestants();
             AddContestantsToGrid(contestantsGrid, contestants);
             AddContestantsToGrid(searchContestantsGrid, contestants);
 
@@ -44,7 +41,7 @@ namespace MotorcyclingContestApp.Forms
             cRacesListBox.Items.Clear();
             cRacesListBox.Items.AddRange(_client.GetRaces().ToArray());
 
-            var events = Enum.GetValues(typeof(Event.Types.Name)).Cast<Event.Types.Name>().ToList();
+            var events = Enum.GetValues(typeof(EventName)).Cast<EventName>().ToList();
             _client.Subscribe(events, HandleEvent);
         }
 
@@ -67,20 +64,20 @@ namespace MotorcyclingContestApp.Forms
                 );
             };
 
-           _client.GetRacesParticipants(addRow);
+            _client.GetRacesParticipants(addRow);
         }
 
-        private void HandleEvent(Event e)
+        private void HandleEvent(Domain.Event e)
         {
             switch (e.Name)
             {
-                case Event.Types.Name.ContestantRegistered:
-                    var contestants = _client.GetContestants().Contestant.ToList();
-                    AddContestantsToGrid(searchContestantsGrid, contestants);
+                case EventName.ContestantRegistered:
+                    var contestants = _client.GetContestants();
+                    AddContestantsToGrid(contestantsGrid, contestants);
                     searchByTeamButton_Click(null, null);
                     AddAllRaces();
                     break;
-                case Event.Types.Name.TeamAdded:
+                case EventName.TeamAdded:
                     AddAllTeams();
                     break;
                 default:
@@ -88,7 +85,7 @@ namespace MotorcyclingContestApp.Forms
             }
         }
 
-        private void AddContestantsToGrid(DataGridView grid, List<ContestantDto> contestants)
+        private void AddContestantsToGrid(DataGridView grid, IEnumerable<Contestant> contestants)
         {
             grid.Rows.Clear();
             foreach (var c in contestants)
@@ -97,7 +94,7 @@ namespace MotorcyclingContestApp.Forms
                     c.Id,
                     c.Name,
                     c.Team.Name,
-                    c.EngineCapacity.Capacity + " " + c.EngineCapacity.Um.ToString()
+                    c.EngineCapacity
                 );
             }
         }
@@ -128,14 +125,14 @@ namespace MotorcyclingContestApp.Forms
 
         private void searchByTeamButton_Click(object sender, EventArgs e)
         {
-            var reply = _client.SearchContestatns(teamNameSearchTextBox.Text);
-            if (reply.Status == Status.Ok)
+            try
             {
-                AddContestantsToGrid(searchContestantsGrid, reply.Contestant.ToList());
+                var contestants = _client.SearchContestatns(teamNameSearchTextBox.Text);
+                AddContestantsToGrid(searchContestantsGrid, contestants);
             }
-            else
+            catch (Exception ex)
             {
-                Error(reply.Message);
+                Error(ex.Message);
             }
         }
 
@@ -167,12 +164,13 @@ namespace MotorcyclingContestApp.Forms
 
         private void registerContestantButton_Click(object sender, EventArgs e)
         {
-            if (cTeamComboBox.SelectedItem == null)
+            if (cTeamComboBox.SelectedItem == null && cTeamComboBox.Text != "")
             {
                 TryAddTeam();
                 return;
             }
-            List<string> errors = new List<string>();
+
+            var errors = new List<string>();
             if (cEngineCapacityComboBox.SelectedItem == null)
             {
                 errors.Add("You must select an engine capacity!");
@@ -181,6 +179,10 @@ namespace MotorcyclingContestApp.Forms
             if (cRacesListBox.CheckedItems.Count < 1)
             {
                 errors.Add("You must select at least one race!");
+            }
+            if (cTeamComboBox.Text == "")
+            {
+                errors.Add("Team name cannot be empty!");
             }
 
             if (errors.Count > 0)
@@ -192,20 +194,20 @@ namespace MotorcyclingContestApp.Forms
             var team = (Team) cTeamComboBox.SelectedItem;
             var ec = (EngineCapacity) cEngineCapacityComboBox.SelectedItem;
             var races = (from object checkedItem in cRacesListBox.CheckedItems select checkedItem as Race).ToList();
-            var reply = _client.RegisterContestant(
-                cNameTextBox.Text,
-                team,
-                ec,
-                races
-            );
 
-            if (reply.Status == Status.Ok)
+            try
             {
+                _client.RegisterContestant(
+                    cNameTextBox.Text,
+                    team,
+                    ec,
+                    races
+                );
                 Info(@"The contestant was added!");
             }
-            else
+            catch (Exception ex)
             {
-                Error(reply.Message);
+                Error(ex.Message);
             }
         }
 
@@ -221,14 +223,35 @@ namespace MotorcyclingContestApp.Forms
                 return;
             }
 
-            var reply = _client.AddTeam(cTeamComboBox.Text);
-            if (reply.Status == Status.Ok)
+            try
             {
+                _client.AddTeam(cTeamComboBox.Text);
+                SelectTeamBasedOnInput();
                 Info(@"The new team was succesfully added.");
             }
-            else
+            catch (Exception e)
             {
-                Error(reply.Message);
+                Error(e.Message);
+            }
+        }
+
+        private void SelectTeamBasedOnInput()
+        {
+            cTeamComboBox.SelectedIndex = cTeamComboBox.FindStringExact(cTeamComboBox.Text);
+            return;
+            int selectedIndex = -1;
+            foreach (var item in cTeamComboBox.Items)
+            {
+                selectedIndex++;
+                var team = (Team)item;
+                if (team.Name.Contains(cTeamComboBox.Text))
+                {
+                    break;
+                }
+            }
+            if (selectedIndex != -1)
+            {
+                cTeamComboBox.SelectedIndex = selectedIndex;
             }
         }
     }

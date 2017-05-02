@@ -13,14 +13,7 @@ namespace MotorcyclingContestApp.Domain
 
         public override string ToString()
         {
-            if (Name != null)
-            {
-                return Name;
-            }
-            else
-            {
-                return "Null team";
-            }
+            return Name ?? "Null team";
         }
     }
 }

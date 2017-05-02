@@ -44,7 +44,7 @@ namespace MotorcyclingContestApp
 
         private static void RegisterTypes()
         {
-            Container.RegisterType<ClientProxy>(new ContainerControlledLifetimeManager());
+            Container.RegisterType<IClientProxy, GrpcClientProxy>(new ContainerControlledLifetimeManager());
             Container.RegisterType<LoginForm>();
             Container.RegisterType<MainForm>();
             Container.RegisterType<Converter>();

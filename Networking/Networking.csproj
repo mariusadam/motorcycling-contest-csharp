@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{21246EED-BC55-4269-A79C-D1B63DF3C112}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Networking</RootNamespace>
+    <AssemblyName>Networking</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <Compile Include="ContestClientWorker.cs" />
+    <Compile Include="ObjectProtocol\Request\AddTeamRequest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AbstractServer.cs" />
+    <Compile Include="ContestServerObjProxy.cs" />
+    <Compile Include="ObjectProtocol\Request\GetItemsRequest.cs" />
+    <Compile Include="ObjectProtocol\Request\LoginRequest.cs" />
+    <Compile Include="ObjectProtocol\Request\RegisterContestantRequest.cs" />
+    <Compile Include="ObjectProtocol\Request\Request.cs" />
+    <Compile Include="ObjectProtocol\Request\SearchContestantsRequest.cs" />
+    <Compile Include="ObjectProtocol\Response\ErrorReponse.cs" />
+    <Compile Include="ObjectProtocol\Response\GetItemsResponse.cs" />
+    <Compile Include="ObjectProtocol\Response\OkResponse.cs" />
+    <Compile Include="ObjectProtocol\Response\Response.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MotorcyclingContestApp\MotorcyclingContestApp.csproj">
+      <Project>{0722a54a-161f-46fa-b53d-bae102f312e6}</Project>
+      <Name>MotorcyclingContestApp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Server\Server.csproj">
+      <Project>{aa49aecc-9a5b-456b-aefb-fb323a83381f}</Project>
+      <Name>Server</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\Services.csproj">
+      <Project>{a4734830-5d08-4ebc-9b1c-dbbea8433d17}</Project>
+      <Name>Services</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

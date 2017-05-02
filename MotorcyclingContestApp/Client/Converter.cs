@@ -47,6 +47,38 @@ namespace MotorcyclingContestApp.Domain
             };
         }
 
+        public Generated.Event.Types.Name ToDto(EventName evName)
+        {
+            switch (evName)
+            {
+                case EventName.ContestantRegistered:
+                    return Generated.Event.Types.Name.ContestantRegistered;
+                case EventName.TeamAdded:
+                    return Generated.Event.Types.Name.TeamAdded;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(evName), evName, null);
+            }
+        }
+
+        public Event ToPoco(Generated.Event e)
+        {
+            switch (e.Name)
+            {
+                case Generated.Event.Types.Name.ContestantRegistered:
+                    return new Event
+                    {
+                        Name = EventName.ContestantRegistered
+                    };
+                case Generated.Event.Types.Name.TeamAdded:
+                    return new Event
+                    {
+                        Name = EventName.TeamAdded
+                    };
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         public TeamDto ToDto(Team team)
         {
             return new TeamDto
@@ -63,6 +95,17 @@ namespace MotorcyclingContestApp.Domain
                 Id = r.Id,
                 Name = r.Name,
                 StarTime = new DateTime(r.StartTime)
+            };
+        }
+
+        public Contestant ToPoco(ContestantDto contestantDto)
+        {
+            return new Contestant
+            {
+                Id = contestantDto.Id,
+                EngineCapacity = ToPoco(contestantDto.EngineCapacity),
+                Name = contestantDto.Name,
+                Team = ToPoco(contestantDto.Team)
             };
         }
     }

@@ -6,7 +6,18 @@ using System.Threading.Tasks;
 
 namespace MotorcyclingContestApp.Domain
 {
-    class Contestant
+    public class Contestant
     {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public EngineCapacity EngineCapacity { get; set; }
+
+        public Team Team { get; set; }
+
+        public override string ToString()
+        {
+            return Name ?? "Null team";
+        }
     }
 }
